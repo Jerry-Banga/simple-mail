@@ -32,10 +32,6 @@ const msgs = [
     }
 ];
 
-// function sleep(ms) {
-//     setTi
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
 
 
 app.get('/inbox', async (req, res) => {
