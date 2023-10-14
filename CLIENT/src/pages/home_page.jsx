@@ -1,21 +1,32 @@
 import { AppNameComponent, HomePageBigBox, ViewMessagesButton } from "../components/home_page_components";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Fragment, useEffect, useState } from "react";
-import { useDispatch } from 'react-redux';
-import { setMails } from "../redux/mails";
+import { useDispatch, useSelector } from 'react-redux';
+import { authenticateUser } from "../redux/userSlice";
+import { Spinner } from "../components/spinner";
+import { fetchMails } from "../redux/mailsSlice";
+import { ErrorComponent } from "../components/error_component";
 
 const HomePage = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch();
-    const { mails, user } = useLoaderData();
     const [numberOfUnreadMails, setNumberOfUnreadMails] = useState(0);
+    const { status, userInfo, error } = useSelector(state => state.user);
+    const mails = useSelector(state => state.mails.mailItems);
 
     const viewAllMessages = () => {
         navigate('/inbox');
     }
 
     useEffect(() => {
-        console.log("use effect in home page is called");
+        if (status === 'idle') {
+            dispatch(authenticateUser())
+        } else if (status === 'authenticated') {
+            if (mails.length === 0) {
+                dispatch(fetchMails())
+            }
+        }
+
         //Calculates the number of unread mails
         if (mails !== undefined && mails.length > 0) {
             const value = Object.values(mails).reduce((count, mail) => {
@@ -25,11 +36,21 @@ const HomePage = () => {
                 return count;
             }, 0);
             setNumberOfUnreadMails(value)
-            dispatch(setMails(mails))
         }
+
     },
-        
-        [dispatch, mails]);
+
+        [dispatch, status, mails]);
+
+
+    if (status === 'failed') {
+        return (
+            <ErrorComponent>
+                {error}
+            </ErrorComponent>
+        );
+    }
+
 
     return (
         <Fragment>
@@ -38,23 +59,23 @@ const HomePage = () => {
             </AppNameComponent>
             <HomePageBigBox>
                 {
-                    user !== undefined ?
+                    userInfo != null ?
                         <div>
                             <p>Hello</p>
-                            <p>{user.name} {user.lastName}</p>
+                            <p>{userInfo.name} {userInfo.lastName}</p>
                         </div> :
-                        <p style={{color: "#D80032"}}>
-                            Sorry this user is not authenticated
-                        </p>
+                        <Spinner />
                 }
                 {
-                    user && <div>
-                        <p>You have {numberOfUnreadMails} unread messages out of {mails !== undefined ? mails.length : 0} total.</p>
+                    userInfo && <div>
+                        <p>You have {numberOfUnreadMails} unread messages out of {mails.length} total.</p>
                     </div>
                 }
-                <ViewMessagesButton onClick={viewAllMessages}>
-                    View messages
-                </ViewMessagesButton>
+                {
+                    mails.length > 0 ? <ViewMessagesButton onClick={viewAllMessages}>
+                        View messages
+                    </ViewMessagesButton> : <span />
+                }
             </HomePageBigBox>
         </Fragment>
     );
