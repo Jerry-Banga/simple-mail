@@ -16,6 +16,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/mails-db", {
 
 const Mail = require('./models/mail');
 const User = require('./models/user');
+const { setTimeout } = require("timers/promises");
 
 //For simplicity I have declared predefined mails here
 const msgs = [
@@ -30,6 +31,11 @@ const msgs = [
         "isRead": false,
     }
 ];
+
+// function sleep(ms) {
+//     setTi
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 
 app.get('/inbox', async (req, res) => {
@@ -60,6 +66,7 @@ app.get('/inbox', async (req, res) => {
 
 app.get('/user', async (req, res) => {
     const { name, lastName } = req.query;
+    await setTimeout(1200, '');//I'm delaying it so, we can show the spinner in the frontend
     try {
         const users = await User.find();
         //Checks if a there is at least one user registered if not, register a predefined user.
